@@ -28,10 +28,14 @@ The agent combines custom business logic tools with PayLink's payment capabiliti
 
 ## Prerequisites
 
+Before getting started, ensure you have:
+
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/) package manager (recommended)
 - OpenAI API key
-- PayLink API key (optional, for production use)
+- A PayLink account — [Create one here](https://paylink-platform.vercel.app/)
+
+For detailed prerequisites, see the [PayLink Prerequisites Guide](https://docs.paylink.dev/agent-to-human/prerequisites).
 
 ## Installation
 
@@ -53,14 +57,24 @@ The agent combines custom business logic tools with PayLink's payment capabiliti
    pip install -e .
    ```
 
-3. **Set up environment variables:**
+3. **Install the PayLink SDK:**
+
+   ```bash
+   pip install paylink
+   ```
+
+   For more installation options, see the [Install Guide](https://docs.paylink.dev/get-started/install).
+
+4. **Set up environment variables:**
 
    Create a `.env` file in the project root:
 
    ```env
    OPENAI_API_KEY=your_openai_api_key
-   PAYLINK_API_KEY=your_paylink_api_key  # Optional
+   PAYLINK_API_KEY=your_paylink_api_key
    ```
+
+   Learn how to get your API key in the [API Key documentation](https://docs.paylink.dev/resources/api-key).
 
 ## Project Structure
 
@@ -75,25 +89,59 @@ agent_with_payment/
 └── README.md
 ```
 
-## Usage
+## Quick Start
 
-### Running with LangGraph CLI
+### 1. Build the Agent
 
-Start the agent server locally:
+This example follows the [Build Agent](https://docs.paylink.dev/agent-to-human/build-agent) guide. The agent is configured in `src/agent.py`:
+
+```python
+from langchain.agents import create_agent
+from langchain.chat_models import init_chat_model
+from paylink.integrations.langchain_tools import PayLinkTools
+
+# Initialize PayLink tools
+paylink_client = PayLinkTools()
+payment_tools = paylink_client.list_tools()
+
+# Combine with custom tools
+tools = [get_orders] + payment_tools
+
+# Create the agent
+agent = create_agent(
+    model=init_chat_model(model="gpt-4o-mini"),
+    tools=tools,
+)
+```
+
+### 2. Run the Agent
+
+**Using LangGraph CLI:**
 
 ```bash
 langgraph dev
 ```
 
-This launches an interactive development server where you can test the agent.
-
-### Running in LangGraph Studio
-
-Open the project in [LangGraph Studio](https://github.com/langchain-ai/langgraph-studio) for a visual interface:
+**Using LangGraph Studio:**
 
 ```bash
 langgraph studio
 ```
+
+### 3. Test Payments
+
+Before processing real payments, test your integration using the [Test Payment Provider](https://docs.paylink.dev/agent-to-human/test-payment-provider).
+
+## Agent to Human Flow
+
+This example implements the **Agent to Human** payment pattern, where AI agents request payments that humans approve. The complete flow includes:
+
+1. **[Prerequisites](https://docs.paylink.dev/agent-to-human/prerequisites)** — Set up your environment
+2. **[Test Payment Provider](https://docs.paylink.dev/agent-to-human/test-payment-provider)** — Validate your integration
+3. **[Build Agent](https://docs.paylink.dev/agent-to-human/build-agent)** — Create your AI agent (this example)
+4. **[Human in the Loop](https://docs.paylink.dev/agent-to-human/human-in-the-loop)** — Add approval workflows
+5. **[Handle Webhooks](https://docs.paylink.dev/agent-to-human/handle-webhooks)** — Process payment callbacks
+6. **[Full Integration](https://docs.paylink.dev/agent-to-human/setup)** — Complete setup guide
 
 ## Tools
 
@@ -118,10 +166,9 @@ Retrieves orders from the database with optional filtering by payment status.
 ### PayLink Tools
 
 The agent automatically loads all available payment tools from PayLink, enabling operations like:
-- Initiating payments
+- Initiating payments (M-Pesa, Card, etc.)
 - Checking payment status
 - Processing refunds
-- And more...
 
 ## Configuration
 
@@ -138,22 +185,19 @@ The agent automatically loads all available payment tools from PayLink, enabling
 }
 ```
 
-### Customizing the Agent
-
-Modify `src/agent.py` to:
-- Change the LLM model
-- Add custom tools
-- Configure PayLink options
+### Customizing PayLink
 
 ```python
 from paylink.integrations.langchain_tools import PayLinkTools
 
-# Initialize with custom configuration
 paylink_client = PayLinkTools(
-    api_key="your_api_key",           # Optional API key
-    payment_provider=["mpesa", "card"] # Filter available providers
+    api_key="your_api_key",              # Your PayLink API key
+    tracing="your_project_id",           # Enable tracing (optional)
+    payment_provider=["mpesa", "card"],  # Filter available providers
 )
 ```
+
+Learn more about [Tracing](https://docs.paylink.dev/resources/tracing) and [Projects](https://docs.paylink.dev/resources/project).
 
 ## Dependencies
 
@@ -209,13 +253,26 @@ from src.tools.my_tool import my_custom_tool
 tools = [get_orders, my_custom_tool] + payment_tools
 ```
 
-## License
+## Resources
 
-MIT
+### PayLink Documentation
+- [About PayLink](https://docs.paylink.dev/overview/about)
+- [Install Guide](https://docs.paylink.dev/get-started/install)
+- [Create an Account](https://docs.paylink.dev/get-started/create-an-account)
+- [API Key](https://docs.paylink.dev/resources/api-key)
+- [Wallet](https://docs.paylink.dev/resources/wallet)
+- [PayLink Agent](https://docs.paylink.dev/resources/agent)
 
-## Links
+### Community
+- [Website](https://paylink-platform.vercel.app/)
+- [Discord](https://discord.gg/bhs62pADCe)
+- [GitHub](https://github.com/paylinkmcp/paylink)
+- [Support](mailto:paylinkmcp@gmail.com)
 
-- [PayLink Documentation](https://paylink.dev)
+### Framework Documentation
 - [LangGraph Documentation](https://langchain-ai.github.io/langgraph/)
 - [LangChain Documentation](https://python.langchain.com/)
 
+## License
+
+MIT
