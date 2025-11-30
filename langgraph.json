@@ -1,0 +1,9 @@
+{
+    "graphs": {
+      "agent_with_payment": "src/agent.py:agent"
+    },
+    "dependencies": ["."],
+    "env": "./.env",
+    "python_version": "3.13"
+  }
+  
